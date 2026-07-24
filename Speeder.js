@@ -4,9 +4,31 @@
   // ---------------------------------------------------------------
   // Setup
   // ---------------------------------------------------------------
-  if(window.pdfjsLib){
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+  const PDF_WORKER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  let pdfWorkerReady = null;
+
+  // Some browsers (notably Safari/iOS) refuse to construct a Worker whose
+  // script lives on a different origin than the page, even when the CDN
+  // sends CORS headers. Fetching the script and loading it from a
+  // same-origin blob URL avoids that restriction.
+  function ensurePdfWorker(){
+    if(pdfWorkerReady) return pdfWorkerReady;
+    if(!window.pdfjsLib) return Promise.reject(new Error('PDF support did not load. Check your connection and try again.'));
+    pdfWorkerReady = fetch(PDF_WORKER_URL)
+      .then(res => {
+        if(!res.ok) throw new Error('network');
+        return res.text();
+      })
+      .then(code => {
+        const blob = new Blob([code], { type: 'application/javascript' });
+        pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+      })
+      .catch(() => {
+        // Fall back to the direct CDN URL — works in browsers that don't
+        // enforce same-origin workers (Chrome, Firefox, most desktop).
+        pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_WORKER_URL;
+      });
+    return pdfWorkerReady;
   }
 
   const WORDS_PER_APPROX_PAGE = 250; // used for .txt / .docx page estimation
@@ -100,8 +122,14 @@
     if(!window.pdfjsLib){
       throw new Error('PDF support did not load. Check your connection and try again.');
     }
+    await ensurePdfWorker();
     const buffer = await file.arrayBuffer();
-    const doc = await pdfjsLib.getDocument({ data: buffer }).promise;
+    let doc;
+    try{
+      doc = await pdfjsLib.getDocument({ data: buffer }).promise;
+    }catch(err){
+      throw new Error('Could not open that PDF (' + (err && err.message ? err.message : 'unknown error') + ').');
+    }
     const result = [];
     for(let p = 1; p <= doc.numPages; p++){
       const page = await doc.getPage(p);
