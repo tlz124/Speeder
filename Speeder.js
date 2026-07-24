@@ -327,10 +327,15 @@
   function renderWord(w){
     if(!w){
       wordDisplay.classList.add('placeholder');
+      wordDisplay.style.transform = 'translateX(0px)';
       wordDisplay.textContent = 'Ready';
       return;
     }
     wordDisplay.classList.remove('placeholder');
+    // Reset any offset from the previous word first, so the measurement
+    // below reflects this word's natural (untransformed) layout position
+    // rather than being thrown off by whatever shift was left over.
+    wordDisplay.style.transform = 'translateX(0px)';
     const p = pivotIndex(w);
     const before = w.slice(0, p);
     const pivotChar = w.slice(p, p + 1);
@@ -339,14 +344,14 @@
       '<span>' + escapeHtml(before) + '</span>' +
       '<span class="pivot-char">' + escapeHtml(pivotChar) + '</span>' +
       '<span>' + escapeHtml(after) + '</span>';
-    requestAnimationFrame(() => {
-      const stageRect = stage.getBoundingClientRect();
-      const pivotEl = wordDisplay.querySelector('.pivot-char');
-      const pivotRect = pivotEl.getBoundingClientRect();
-      const stageCenter = stageRect.left + stageRect.width / 2;
-      const pivotCenter = pivotRect.left + pivotRect.width / 2;
-      wordDisplay.style.transform = 'translateX(' + (stageCenter - pivotCenter) + 'px)';
-    });
+    // getBoundingClientRect forces a synchronous layout, so we can measure
+    // and correct in the same tick — no rAF delay, no one-frame flash.
+    const stageRect = stage.getBoundingClientRect();
+    const pivotEl = wordDisplay.querySelector('.pivot-char');
+    const pivotRect = pivotEl.getBoundingClientRect();
+    const stageCenter = stageRect.left + stageRect.width / 2;
+    const pivotCenter = pivotRect.left + pivotRect.width / 2;
+    wordDisplay.style.transform = 'translateX(' + (stageCenter - pivotCenter) + 'px)';
   }
 
   function durationFor(word){
@@ -438,5 +443,11 @@
     if(e.code === 'ArrowRight'){ pause(); showAt(idx + 4); }
     if(e.code === 'ArrowLeft'){ pause(); showAt(idx - 6); }
   });
+
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(() => {
+      if(words.length) renderWord(words[idx] || '');
+    });
+  }
 
 })();
