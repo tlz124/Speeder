@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Speeder — RSVP Speed Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="Speeder.css">
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="dot"></span>SPEEDER</div>
+  <div class="stat" id="wpmReadout">300 WPM</div>
+</header>
+
+<!-- ============ UPLOAD / SETUP SCREEN ============ -->
+<section class="screen" id="setupScreen">
+
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="fileInput" accept=".txt,.pdf,.docx" hidden>
+    <i class="upload-icon" aria-hidden="true"></i>
+    <div class="upload-title">Upload a document</div>
+    <div class="upload-sub">.txt, .pdf, or .docx</div>
+  </div>
+
+  <div class="or-row">
+    <span>or</span>
+  </div>
+
+  <button class="btn-ghost" id="pasteToggle" type="button">Paste text instead</button>
+
+  <div class="paste-panel hidden" id="pastePanel">
+    <textarea id="textInput" placeholder="Paste text here…"></textarea>
+    <button class="btn-solid" id="usePasted" type="button">Use this text</button>
+  </div>
+
+  <div class="file-info hidden" id="fileInfo">
+    <div class="file-name" id="fileName"></div>
+    <button class="btn-icon-small" id="clearFile" aria-label="Remove file" type="button">✕</button>
+  </div>
+
+  <div class="page-range hidden" id="pageRangePanel">
+    <div class="page-range-label">
+      document has <b id="totalPages">0</b> estimated pages
+    </div>
+    <div class="page-range-inputs">
+      <div class="field">
+        <label for="fromPage">from page</label>
+        <input type="number" id="fromPage" min="1" value="1" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="toPage">to page</label>
+        <input type="number" id="toPage" min="1" value="1" inputmode="numeric">
+      </div>
+    </div>
+    <div class="chunk-note">~<span id="chunkWords">0</span> words in this range</div>
+    <div class="chunk-warning hidden" id="chunkWarning">Large ranges may take a moment to process on this device.</div>
+  </div>
+
+  <button class="btn-solid btn-start hidden" id="startBtn" type="button">Start reading</button>
+
+  <div class="hint">Text stays on this device — nothing is uploaded anywhere.</div>
+</section>
+
+<!-- ============ READING SCREEN ============ -->
+<section class="screen hidden" id="readerScreen">
+
+  <main>
+    <div class="stage">
+      <div class="reticle top"></div>
+      <div class="baseline"></div>
+      <div class="word placeholder" id="wordDisplay">Ready</div>
+      <div class="reticle bottom"></div>
+    </div>
+    <div class="range-label" id="rangeLabel"></div>
+  </main>
+
+  <div class="progress-wrap">
+    <div class="progress-track" id="progressTrack">
+      <div class="progress-fill" id="progressFill"></div>
+      <div class="progress-handle" id="progressHandle"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="transport">
+      <button class="btn-icon" id="btnBack" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 19V5l-9 7 9 7z"/><path d="M22 19V5l-9 7 9 7z"/></svg>
+      </button>
+      <button class="btn-play" id="btnPlay" aria-label="Play">
+        <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button class="btn-icon" id="btnFwd" aria-label="Forward">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5v14l9-7z"/><path d="M2 5v14l9-7z"/></svg>
+      </button>
+    </div>
+
+    <div class="speed-row">
+      <div class="speed-label"><b id="speedVal">300</b> wpm</div>
+      <input type="range" id="speedSlider" min="150" max="1000" step="10" value="300">
+    </div>
+
+    <button class="btn-ghost btn-full" id="btnNewDoc" type="button">Load a different document</button>
+  </div>
+
+</section>
+
+<div class="toast hidden" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="Speeder.js"></script>
+</body>
+</html>
